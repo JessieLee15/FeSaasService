@@ -1,0 +1,28 @@
+{
+  "name": "fesaasservice",
+  "version": "1.0.0",
+  "description": "dmallmax saas 系统node后台服务",
+  "main": "app.js",
+  "scripts": {
+    "start": "node bin/www",
+    "debug": "node --inspect bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "saas",
+    "node",
+    "中间层"
+  ],
+  "author": "lizhoajun",
+  "license": "ISC",
+  "dependencies": {
+    "http-proxy-middleware": "^0.20.0",
+    "koa": "^2.11.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-json": "^2.0.2",
+    "koa-log4": "^2.3.2",
+    "koa-onerror": "^4.1.0",
+    "koa-router": "^7.4.0",
+    "koa2-connect": "^1.0.2"
+  }
+}
