@@ -1,0 +1,5 @@
+{
+  "key1": 123,
+  "key2": [1, 22, 333],
+  "key3": "Hello, Koa-static"
+}

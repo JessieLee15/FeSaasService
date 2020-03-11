@@ -41,7 +41,11 @@ app.use(bodyparser({
 app.use(json({
   pretty: ENV_DIC[process.env.NODE_ENV] === 'development'
 }))
-app.use(require('koa-static')(__dirname + '/static'));  //静态资源
+
+// middlewares - 静态资源
+app.use(require('koa-static')(__dirname + '/static/common'));
+app.use(require('koa-static')(__dirname + '/static/data'));
+app.use(require('koa-static')(__dirname + '/static/pages'));
 
 //middlewares - 所有请求的日志
 app.use(log4js.koaLogger(log4js.getLogger('http'), {
@@ -79,7 +83,7 @@ app.use(async (ctx, next) => {
   }
   try {
     let result0 = await checkUserPermission(ctx);
-    if(result0.login){
+    if(!result0.login){
       ctx.body = RetCode.NoPermission;
     }
     //在这里将用户信息放到header，转发给其他系统
