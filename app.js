@@ -3,63 +3,124 @@ const app = new Koa()
 const json = require('koa-json')
 const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
-const httpProxy = require('http-proxy-middleware');
-const k2c = require('koa2-connect');
+var cors = require('koa2-cors');
+
 const log4js = require('koa-log4')
-const logger = log4js.getLogger('app')
 const loggerError = log4js.getLogger('errors')
 
-const index = require('./routes/index')
-const order = require('./routes/order')
+const initAgency = require('./proxy/agency')
+const baseAPI = require('./config/baseAPI')
+const PROJECTS = require('./config/projects')
+const ENV_DIC = require('./config/env')
+const RetCode = require('./config/retCode')
 
-// error handler
+const static = require('./routes/static')
+const index = require('./routes/index')
+const misRoute = require('./routes/mis/index')
+const baseDataRoute = require('./routes/baseData/index');
+const serviceRoute = require('./routes/service/index');
+
+// error handler  
 onerror(app)
 
-// middlewares
+
+//middlewares - 设置参数等初始化
+app.use(async (ctx, next) => {
+  //设置环境变量
+  ctx.NODE_ENV = ENV_DIC[process.env.NODE_ENV];
+  ctx.CUSTOM_VERSION = '1.0.011';
+  await next();
+})
+
+// middlewares - 解析 post body
 app.use(bodyparser({
   enableTypes: ['json', 'form', 'text']
 }))
-app.use(json())
-//所有请求的日志
-/* app.use(log4js.koaLogger(log4js.getLogger('http'), {
-  level: 'auto'
-})) */
-// app.use(require('koa-static')(__dirname + '/public'))
 
-//TODO: 接口转发
-app.use(async (ctx, next) => {
-  if (ctx.url.startsWith('/mis')) { //匹配有api字段的请求url
-    ctx.respond = false // 绕过koa内置对象response ，写入原始res对象，而不是koa处理过的response
-    await k2c(httpProxy({
-      target: 'http://saas1.market-mis.wmdev2.lsh123.com',
-      changeOrigin: true,
-      secure: false,
-      pathRewrite: {
-        '^/mis': ''
-      }
-    }))(ctx, next);
-  }
-  await next()
-})
+// middlewares - beautify params
+app.use(json({
+  pretty: ENV_DIC[process.env.NODE_ENV] === 'development'
+}))
+app.use(require('koa-static')(__dirname + '/static'));  //静态资源
+
+//middlewares - 所有请求的日志
+app.use(log4js.koaLogger(log4js.getLogger('http'), {
+  level: 'auto'
+}))
 
 // logger - 所有请求都会走这里，包括转发的请求，但是转发请求没有时间记录
-app.use(async (ctx, next) => {
+/* app.use(async (ctx, next) => {
   const start = new Date();
   await next();
   const ms = new Date() - start;
   logger.info('%s %s - %s', ctx.method, ctx.url, ms)
-})
+}) */
 
-//TODO: 用户权限服务
+
+//middlewares - 解决请求跨越 
+app.use(
+  cors({
+    origin: function (ctx) { //设置允许来自指定域名请求
+      return ctx.request.headers.origin;
+    },
+    // maxAge: 5, //指定本次预检请求的有效期，单位为秒。
+    credentials: true, //是否允许发送Cookie
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], //设置所允许的HTTP请求方法
+    allowHeaders: ['Content-Type', 'Authorization', 'Accept'], //设置服务器支持的所有头信息字段
+    exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'] //设置获取其他自定义字段
+  })
+);
+
+//用户权限服务
+app.use(async (ctx, next) => {
+  if (ctx.path == '/' || ctx.path.startsWith('/service')) {
+    await next();
+    return;
+  }
+  try {
+    let result0 = await checkUserPermission(ctx);
+    if(result0.login){
+      ctx.body = RetCode.NoPermission;
+    }
+    //在这里将用户信息放到header，转发给其他系统
+    // http request headerkey是大小写不敏感的（官方建议首字母大写），这里服务端收到的全是小写key
+    for (var key in result0) {
+      result0[key] = encodeURIComponent(result0[key]);
+    }
+    ctx.dmCustom = result0;
+    ctx.request.header = Object.assign({}, ctx.request.header, ctx.dmCustom);
+    ctx.request.headers = Object.assign({}, ctx.request.headers, ctx.dmCustom);
+    await next();
+  } catch (e) {
+    ctx.app.emit("error", e, ctx);
+  }
+});
+
+//接口转发
+initAgency(app);
+
+function checkUserPermission(ctx) {
+  return new Promise((resolve, reject) => {
+    resolve({
+      login: true,
+      userId: '123',
+      userName: 'Jessie'
+    });
+  })
+}
+
 
 // routes-接口聚合
-app.use(index.routes(), index.allowedMethods())
-app.use(order.routes(), order.allowedMethods())
+app.use(static.routes(), static.allowedMethods());
+app.use(index.routes(), index.allowedMethods());
+app.use(serviceRoute.routes(), serviceRoute.allowedMethods());
+app.use(baseDataRoute.routes(), baseDataRoute.allowedMethods());
+app.use(misRoute.routes(), misRoute.allowedMethods());
 
-// error-handling
+// error-handling:::这里统一处理系统所有异常
 app.on('error', (err, ctx) => {
-  console.error('server error', err, ctx)
-  // logger.error('server error', err, ctx)
+  ctx.body = err.message ? err.message : err;
+  loggerError.error('node error:', err, ctx)
 });
 
 module.exports = app

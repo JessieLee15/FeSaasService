@@ -1,12 +1,14 @@
 {
   "name": "fesaasservice",
-  "version": "1.0.0",
+  "version": "1.0.008",
   "description": "dmallmax saas 系统node后台服务",
   "main": "app.js",
   "scripts": {
     "start": "node bin/www",
-    "debug": "node --inspect bin/www",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "debug": "NODE_ENV=development node --inspect bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pm2": "cnpm i  && PORT=80 pm2 start processes.json --no-daemon --env production",
+    "pm2-dev": "cnpm i  &&  pm2 start processes.json  --env uat"
   },
   "keywords": [
     "saas",
@@ -16,6 +18,7 @@
   "author": "lizhoajun",
   "license": "ISC",
   "dependencies": {
+    "excel-export": "^0.5.1",
     "http-proxy-middleware": "^0.20.0",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.2.1",
@@ -23,6 +26,11 @@
     "koa-log4": "^2.3.2",
     "koa-onerror": "^4.1.0",
     "koa-router": "^7.4.0",
-    "koa2-connect": "^1.0.2"
+    "koa-static": "^5.0.0",
+    "koa2-connect": "^1.0.2",
+    "koa2-cors": "^2.0.6",
+    "moment": "^2.24.0",
+    "pm2": "4.2.3",
+    "request": "^2.88.0"
   }
 }
