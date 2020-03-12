@@ -9,8 +9,6 @@ const log4js = require('koa-log4')
 const loggerError = log4js.getLogger('errors')
 
 const initAgency = require('./proxy/agency')
-const baseAPI = require('./config/baseAPI')
-const PROJECTS = require('./config/projects')
 const ENV_DIC = require('./config/env')
 const RetCode = require('./config/retCode')
 

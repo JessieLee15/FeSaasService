@@ -23,7 +23,6 @@
 ├── bin                    //项目入口，服务启动的地方
 │   └── www
 ├── config                  //配置文件【业务】
-│   ├── baseAPI.js            //API
 │   ├── env.js                //环境变量
 │   ├── httpCode.js           //HTTP 异常code
 │   ├── projects.js           //项目（服务地址）
