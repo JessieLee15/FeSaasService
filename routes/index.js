@@ -5,8 +5,8 @@ router.get('/', async (ctx, next) => {
   ctx.body = `欢迎使用FE-Service!，版本：${ctx.CUSTOM_VERSION}，当前环境：${ctx.NODE_ENV}`
 })
 
-router.post('/demo3', async (ctx, next) => {
-  ctx.body = 'success';
+router.post('/demo', async (ctx, next) => {
+  ctx.body = 'demo';
 })
 
 router.get('/service/version', async (ctx, next) => {
