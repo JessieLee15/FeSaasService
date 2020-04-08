@@ -12,6 +12,11 @@ const loggerError = log4js.getLogger('errors')
 const index = require('./routes/index')
 const order = require('./routes/order')
 
+const myCPUs = require('os').cpus();
+
+console.log('世间万物皆有情：：：：')
+console.log(myCPUs)
+
 // error handler
 onerror(app)
 
