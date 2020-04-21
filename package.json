@@ -23,6 +23,8 @@
     "koa-log4": "^2.3.2",
     "koa-onerror": "^4.1.0",
     "koa-router": "^7.4.0",
-    "koa2-connect": "^1.0.2"
+    "koa2-connect": "^1.0.2",
+    "request": "^2.88.2",
+    "superagent": "^5.2.2"
   }
 }
